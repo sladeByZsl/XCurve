@@ -70,7 +70,50 @@ public class BezierCurveInspector : Editor
     {
         if (GUILayout.Button("保存为二进制文件"))
         {
+            SavePathPrefab(Selection.activeGameObject);
+            SaveBinData(Selection.activeGameObject);
+            AssetDatabase.Refresh();
+        }
+    }
 
+    //路径预设的保存目录
+    const string c_pathPrefabsSaveDir = "Assets/XCurve/Prefab";
+    //路径二进制文件保存目录
+    const string c_pathBinSaveDir = "Assets/XCurve/Data";
+
+    public void SavePathPrefab(GameObject obj)
+    {
+        var targetSaveDir = string.Format("{0}/{1}.prefab", c_pathPrefabsSaveDir, obj.name);
+
+#if UNITY_5
+        PrefabUtility.CreatePrefab(targetSaveDir, spline.gameObject, ReplacePrefabOptions.ConnectToPrefab);
+#else
+        PrefabUtility.SaveAsPrefabAssetAndConnect(obj, targetSaveDir, InteractionMode.AutomatedAction);
+#endif
+        AssetDatabase.SaveAssets();
+    }
+
+    public void SaveBinData(GameObject obj)
+    {
+        string name = obj.name;
+        Vector3[] data = obj.GetComponent<BezierCurve>().points;
+        List<BezierData> lst = CurveData.Instance.bezierData;
+        bool contain = false;
+        for (int i = 0; i < lst.Count; i++)
+        {
+            if (lst[i].name== name)
+            {
+                lst[i].data = data;
+                contain = true;
+            }
+        }
+
+        if(!contain)
+        {
+            BezierData bezierData = new BezierData();
+            bezierData.name = name;
+            bezierData.data = data;
+            lst.Add(bezierData);
         }
     }
 }
